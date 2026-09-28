@@ -24,7 +24,12 @@
   "license": "EUPL-1.2",
   "signalk-plugin-enabled-by-default": true,
   "signalk": {
-    "displayName": "Ship's Time"
+    "displayName": "Ship's Time",
+    "appIcon": "./icon-250.png",
+    "screenshots": [
+      "doc/plotter.png",
+      "doc/settings.png"
+    ]
   },
   "engines": {
     "node": ">=22.0.0"
