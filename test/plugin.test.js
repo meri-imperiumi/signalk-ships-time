@@ -11,16 +11,22 @@ function createMockApp() {
   const messages = [];
   const statuses = [];
   const errors = [];
+  const providers = [];
+  const uses = [];
   const deltaHandlers = [];
   const state = { unsubscribed: 0 };
   return {
     messages,
     statuses,
     errors,
+    providers,
+    uses,
     state,
     setPluginStatus: (s) => statuses.push(s),
     handleMessage: (_source, msg) => messages.push(msg),
     error: (e) => errors.push(e),
+    registerResourceProvider: (provider) => providers.push(provider),
+    use: (prefix, middleware) => uses.push([prefix, middleware]),
     subscriptionmanager: {
       subscribe: (_subscription, unsubscribes, _onError, onDelta) => {
         deltaHandlers.push(onDelta);
@@ -115,6 +121,19 @@ describe("manual mode", () => {
       }
     }
     plugin.stop();
+  });
+});
+
+describe("plotter extension", () => {
+  test("registers on start and empties on stop", async () => {
+    const app = createMockApp();
+    const plugin = pluginFactory(app);
+    plugin.start({ mode: "manual", utcOffset: 2 });
+    assert.strictEqual(app.providers.length, 1);
+    assert.strictEqual(app.providers[0].type, "plotterExtensions");
+    assert.strictEqual(app.uses[0][0], "/plotterext/signalk-ships-time");
+    plugin.stop();
+    assert.deepStrictEqual(await app.providers[0].methods.listResources(), {});
   });
 });
 

@@ -4,8 +4,8 @@
   "description": "Publishes the vessel's timezone offset so clocks aboard show ship's local time",
   "main": "index.js",
   "scripts": {
-    "format": "npx @biomejs/biome check --use-editorconfig=true --write index.js test/",
-    "lint": "npx @biomejs/biome check --use-editorconfig=true index.js test/",
+    "format": "npx @biomejs/biome check --use-editorconfig=true --write index.js lib/ test/ public/",
+    "lint": "npx @biomejs/biome check --use-editorconfig=true index.js lib/ public/",
     "test": "node --test --test-force-exit \"test/*.test.js\""
   },
   "repository": {

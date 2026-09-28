@@ -23,6 +23,8 @@
 
 const tzLookup = require("tz-lookup");
 
+const { registerPlotterExtension } = require("./lib/time-ext.js");
+
 const PLUGIN_ID = "signalk-ships-time";
 const OFFSET_PATH = "environment.time.timezoneOffset";
 const REGION_PATH = "environment.time.timezoneRegion";
@@ -118,6 +120,7 @@ module.exports = (app) => {
   let position = null;
   let recheck = null;
   let lastPublished = null;
+  let teardownPlotterExt = null;
   const unsubscribes = [];
 
   /**
@@ -272,6 +275,10 @@ module.exports = (app) => {
         ],
       });
 
+      // Serve the 1x1 plotter tile in every mode: it reads GNSS time
+      // and the published timezone straight off the Signal K bus.
+      teardownPlotterExt = registerPlotterExtension(app, { id: PLUGIN_ID });
+
       if (mode === "manual") {
         manualMinutes = Math.round((raw.utcOffset ?? 0) * 60);
         manualRegion =
@@ -318,6 +325,10 @@ module.exports = (app) => {
       if (recheck) {
         clearInterval(recheck);
         recheck = null;
+      }
+      if (teardownPlotterExt) {
+        teardownPlotterExt();
+        teardownPlotterExt = null;
       }
       for (const f of unsubscribes) f();
       unsubscribes.length = 0;

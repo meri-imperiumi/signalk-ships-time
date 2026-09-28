@@ -10,6 +10,15 @@ This plugin publishes the vessel's timezone so every clock and display aboard ca
 * **manual**: the crew configures a UTC offset in decimal hours (and optionally an IANA region) and updates it when crossing timezones.
 * **auto**: the IANA timezone is derived from the vessel's position, and the offset (DST included) is computed from it. Timezone changes are rare, so recomputes and the position updates requested from the server are both throttled to once every 10 minutes by default (configurable). The delta is republished only when the timezone actually changes.
 
+## Plotter tile
+
+The plugin registers a 1×1 Plotter Extensions API v1 tile so the chart plotter shows the time at a glance:
+
+* **UTC** comes from `navigation.datetime` (GNSS), skew-corrected against the device clock so the display keeps ticking between GNSS updates. When GNSS time is unavailable the tile falls back to the device clock and flags it with a `SYS` badge.
+* **Ship's time** is that UTC plus the published `environment.time.timezoneOffset`, with `environment.time.timezoneRegion` shown as the zone label when known.
+
+The tile reads everything straight off the host plotter's Signal K relay — there is deliberately no separate webapp. Long-press opens the host's config/remove dialog.
+
 ## Timezone lookup library decision
 
 Auto mode needs a position → timezone lookup. We evaluated the two main candidates:

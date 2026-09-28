@@ -18,3 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   tz-lookup, offset computed with DST, republished on change. Lookups
   and position updates requested from the server are throttled to once
   per 10 minutes by default (configurable).
+- 1×1 plotter tile (Plotter Extensions API v1): shows UTC from
+  `navigation.datetime` (skew-corrected, with a SYS badge when falling
+  back to the device clock) and ship's time alongside it, reading the
+  published timezone off the host's Signal K relay.
