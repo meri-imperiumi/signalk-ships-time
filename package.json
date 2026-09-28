@@ -1,0 +1,39 @@
+{
+  "name": "@meri-imperiumi/signalk-ships-time",
+  "version": "0.1.0",
+  "description": "Publishes the vessel's timezone offset so clocks aboard show ship's local time",
+  "main": "index.js",
+  "scripts": {
+    "format": "npx @biomejs/biome check --use-editorconfig=true --write index.js test/",
+    "lint": "npx @biomejs/biome check --use-editorconfig=true index.js test/",
+    "test": "node --test --test-force-exit \"test/*.test.js\""
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/meri-imperiumi/signalk-ships-time.git"
+  },
+  "bugs": {
+    "url": "https://github.com/meri-imperiumi/signalk-ships-time/issues"
+  },
+  "homepage": "https://github.com/meri-imperiumi/signalk-ships-time#readme",
+  "keywords": [
+    "signalk-node-server-plugin",
+    "signalk-category-utility"
+  ],
+  "author": "Henri Bergius <henri.bergius@iki.fi>",
+  "license": "EUPL-1.2",
+  "signalk-plugin-enabled-by-default": true,
+  "signalk": {
+    "displayName": "Ship's Time"
+  },
+  "engines": {
+    "node": ">=22.0.0"
+  },
+  "dependencies": {
+    "tz-lookup": "^6.1.25"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^2.0.0",
+    "@signalk/server-api": "^2.30.0"
+  }
+}
