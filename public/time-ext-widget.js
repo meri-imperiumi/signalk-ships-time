@@ -115,9 +115,10 @@ template.innerHTML = /* html */ `
       font-variant-numeric: tabular-nums;
       overflow: hidden;
       white-space: nowrap;
+      color: var(--text-muted, #9aa3ad);
     }
     .row.ship .time {
-      color: var(--tile-accent);
+      color: var(--text-main, #ffffff);
       font-size: clamp(0.9rem, 4.2vh, 1.3rem);
     }
     .zone {
