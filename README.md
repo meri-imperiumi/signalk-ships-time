@@ -8,7 +8,9 @@ This plugin publishes the vessel's timezone so every clock and display aboard ca
 ## Modes
 
 * **manual**: the crew configures a UTC offset in decimal hours (and optionally an IANA region) and updates it when crossing timezones.
-* **auto**: the IANA timezone is derived from the vessel's position, and the offset (DST included) is computed from it. Timezone changes are rare, so recomputes and the position updates requested from the server are both throttled to once every 10 minutes by default (configurable). The delta is republished only when the timezone actually changes.
+* **auto**: the IANA timezone is derived from the vessel's position, and the offset (DST included) is computed from it. Timezone changes are rare, so recomputes and the position updates requested from the server are both throttled to once every 10 minutes by default (configurable).
+
+The current timezone is refreshed every 30 seconds in both modes so Signal K does not time out the otherwise static value. Position updates remain deduplicated and only timezone changes update the published state outside this heartbeat.
 
 ## Plotter tile
 

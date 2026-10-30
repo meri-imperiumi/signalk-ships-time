@@ -12,8 +12,9 @@
  *   region) and updates it when crossing timezones.
  * - auto: the IANA timezone is derived from the vessel's position via
  *   tz-lookup, and the offset (DST included) is computed from it. The
- *   offset is republished only when it changes; a low-frequency recheck
- *   catches DST transitions while the vessel is stationary.
+ *   offset is republished when it changes; a low-frequency recheck catches
+ *   DST transitions while the vessel is stationary, and a heartbeat keeps
+ *   the otherwise static value live in Signal K.
  *
  * @file index.js
  */
@@ -46,6 +47,13 @@ const OFFSET_LIMIT_MINUTES = 780;
  * interval. Positions that do arrive still recompute immediately.
  */
 const DEFAULT_RECHECK_SECONDS = 600;
+
+/**
+ * Signal K times out stale path values after about one minute. Ship's time
+ * can remain unchanged for months, so refresh it well before that timeout.
+ * This heartbeat is separate from the slower position and DST recheck.
+ */
+const DEFAULT_HEARTBEAT_SECONDS = 30;
 
 /**
  * Converts minutes east of UTC into the `(-)hhmm` encoding the
@@ -119,22 +127,27 @@ module.exports = (app) => {
   let manualRegion = null;
   let position = null;
   let recheck = null;
+  let heartbeat = null;
   let lastPublished = null;
+  let lastTimezone = null;
   let teardownPlotterExt = null;
   const unsubscribes = [];
 
   /**
    * Publishes the timezone offset (and region when known) as an
    * environment.time delta. Deduplicated: nothing is sent when neither
-   * value changed since the last publish.
+   * value changed since the last publish, unless `force` is used by the
+   * heartbeat to keep the path live.
    *
    * @param {number} hhmm - Offset in the schema's (-)hhmm encoding
    * @param {string|null} region - IANA region, when known
+   * @param {boolean} force - Republish even when the value is unchanged
    */
-  function publish(hhmm, region) {
+  function publish(hhmm, region, force = false) {
     const key = `${hhmm}/${region || ""}`;
-    if (key === lastPublished) return;
+    if (!force && key === lastPublished) return;
     lastPublished = key;
+    lastTimezone = { hhmm, region };
     const values = [{ path: OFFSET_PATH, value: hhmm }];
     if (region) values.push({ path: REGION_PATH, value: region });
     app.handleMessage(PLUGIN_ID, {
@@ -279,6 +292,16 @@ module.exports = (app) => {
       // and the published timezone straight off the Signal K bus.
       teardownPlotterExt = registerPlotterExtension(app, { id: PLUGIN_ID });
 
+      const heartbeatSeconds = Math.max(
+        0.001,
+        raw.heartbeatInterval ?? DEFAULT_HEARTBEAT_SECONDS,
+      );
+      heartbeat = setInterval(() => {
+        if (lastTimezone) {
+          publish(lastTimezone.hhmm, lastTimezone.region, true);
+        }
+      }, heartbeatSeconds * 1000);
+
       if (mode === "manual") {
         manualMinutes = Math.round((raw.utcOffset ?? 0) * 60);
         manualRegion =
@@ -326,6 +349,10 @@ module.exports = (app) => {
         clearInterval(recheck);
         recheck = null;
       }
+      if (heartbeat) {
+        clearInterval(heartbeat);
+        heartbeat = null;
+      }
       if (teardownPlotterExt) {
         teardownPlotterExt();
         teardownPlotterExt = null;
@@ -334,6 +361,7 @@ module.exports = (app) => {
       unsubscribes.length = 0;
       position = null;
       lastPublished = null;
+      lastTimezone = null;
       setStatus("Ship's time stopped");
     },
   };

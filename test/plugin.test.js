@@ -223,6 +223,31 @@ describe("auto mode", () => {
     plugin.stop();
   });
 
+  test("heartbeats an unchanged timezone before Signal K can time it out", async () => {
+    const app = createMockApp();
+    const plugin = pluginFactory(app);
+    plugin.start({
+      mode: "auto",
+      lookup: () => "America/Grenada",
+      now: "2026-10-28T01:34:55Z",
+      recheckInterval: 3600,
+      heartbeatInterval: 0.01,
+    });
+    app.sendPositionDelta(12.05, -61.75);
+    assert.strictEqual(deltasOf(app).length, 1);
+    await new Promise((resolve) => setTimeout(resolve, 35));
+    const deltas = deltasOf(app);
+    assert.ok(deltas.length >= 2);
+    assert.deepStrictEqual(
+      deltas.at(-1).updates[0].values,
+      deltas[0].updates[0].values,
+    );
+    plugin.stop();
+    const countAfterStop = deltas.length;
+    await new Promise((resolve) => setTimeout(resolve, 25));
+    assert.strictEqual(deltasOf(app).length, countAfterStop);
+  });
+
   test("stop unsubscribes and halts the recheck loop", async () => {
     const app = createMockApp();
     const plugin = pluginFactory(app);
